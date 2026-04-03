@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Athlete Profile Builder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=Manrope:wght@200;300;400;500;600;700;800&family=Lexend:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ═══════════════════════════════
+     HEADER
+═══════════════════════════════ -->
+<header class="app-header">
+  <div class="header-left">
+    <button class="icon-btn" id="header-back" aria-label="Go back">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <h1 class="header-title">Athlete Profile</h1>
+  </div>
+  <button class="save-exit-btn" id="save-exit">SAVE &amp; EXIT</button>
+</header>
+
+<!-- ═══════════════════════════════
+     APP SHELL
+═══════════════════════════════ -->
+<div class="app-shell">
+
+  <!-- STEPS AREA -->
+  <div class="steps-area">
+
+    <!-- ─────────────────────────────
+         SCREEN 0 · START
+    ───────────────────────────── -->
+    <section class="screen active" data-screen="start" id="screen-start">
+      <div class="start-inner">
+        <div class="ambient glow-cyan"></div>
+        <div class="ambient glow-lime"></div>
+
+        <!-- Blurred hook card -->
+        <div class="hook-card">
+          <div class="hook-card-header">
+            <div class="hook-avatar"><span class="material-symbols-outlined">person</span></div>
+            <div class="hook-info">
+              <div class="skeleton sk-lg"></div>
+              <div class="skeleton sk-sm"></div>
+            </div>
+          </div>
+          <div class="hook-stats">
+            <div class="hook-stat">
+              <div class="skeleton sk-dot"></div><div class="skeleton sk-val sk-secondary"></div>
+            </div>
+            <div class="hook-stat">
+              <div class="skeleton sk-dot"></div><div class="skeleton sk-val sk-primary"></div>
+            </div>
+            <div class="hook-stat">
+              <div class="skeleton sk-dot"></div><div class="skeleton sk-val sk-tertiary"></div>
+            </div>
+          </div>
+          <div class="hook-preview-label">Previewing Performance Hub</div>
+          <div class="hook-card-blur"></div>
+        </div>
+
+        <div>
+          <h2 class="display-headline">LET'S BUILD<br/><span class="text-primary">YOUR PROFILE</span></h2>
+        </div>
+
+        <div class="col-gap-md">
+          <p class="section-sub">Turn your stats and highlights into a professional recruiter-ready profile.</p>
+
+          <div class="strength-compact">
+            <div class="strength-label-group">
+              <span class="label-xs" style="margin-bottom:4px;">Profile Strength</span>
+              <div style="display:flex;align-items:baseline;gap:4px;">
+                <span class="strength-number" id="start-strength-num">0</span>
+                <span class="strength-pct">%</span>
+              </div>
+            </div>
+            <div class="ring-wrap size-sm">
+              <svg class="ring-svg" viewBox="0 0 60 60">
+                <circle class="ring-track" cx="30" cy="30" r="26" fill="none" stroke-width="4"/>
+                <circle class="ring-fill cyan" id="start-ring" cx="30" cy="30" r="26" fill="none" stroke-width="4" stroke-dasharray="163" stroke-dashoffset="163"/>
+              </svg>
+              <div class="ring-center">
+                <span class="material-symbols-outlined ring-icon-sm">bolt</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-cta" id="start-cta">
+            START YOUR JOURNEY
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────
+         SCREEN 1 · IDENTITY
+         (4 internal sub-steps)
+    ───────────────────────────── -->
+    <section class="screen" data-screen="identity" id="screen-identity">
+      <div class="identity-layout">
+
+        <!-- Silhouette column -->
+        <div class="silhouette-col">
+          <div style="position:relative;">
+            <!--
+              data-pose drives CSS pose switching:
+              idle | field | gk
+            -->
+            <svg class="silhouette-svg" id="silhouette-svg"
+                 viewBox="0 0 200 300"
+                 xmlns="http://www.w3.org/2000/svg"
+                 data-pose="idle" aria-hidden="true">
+
+              <!-- Jersey number overlaid on torso -->
+              <text class="jersey-text" id="jersey-text"
+                    x="100" y="112"
+                    text-anchor="middle" dominant-baseline="middle"
+                    opacity="0">00</text>
+
+              <!-- POSE: IDLE (neutral standing) -->
+              <g class="pose pose-idle">
+                <circle cx="100" cy="40" r="22"/>
+                <rect x="91" y="60" width="18" height="11" rx="3"/>
+                <path d="M72,70 C72,67 78,63 92,63 L108,63 C122,63 128,67 128,70 L122,156 L78,156 Z"/>
+                <path d="M74,73 C63,92 55,122 52,152 L66,156 C68,130 74,102 84,82 Z"/>
+                <path d="M126,73 C137,92 145,122 148,152 L134,156 C132,130 126,102 116,82 Z"/>
+                <path d="M80,154 C79,198 77,240 76,270 L92,272 C93,240 94,198 93,154 Z"/>
+                <path d="M120,154 C121,198 123,240 124,270 L108,272 C107,240 107,198 107,154 Z"/>
+                <ellipse class="foot-l" cx="84" cy="272" rx="16" ry="6"/>
+                <ellipse class="foot-r" cx="116" cy="272" rx="16" ry="6"/>
+              </g>
+
+              <!-- POSE: FIELD PLAYER (ready stance) -->
+              <g class="pose pose-field">
+                <circle cx="101" cy="40" r="22"/>
+                <rect x="92" y="60" width="18" height="11" rx="3"/>
+                <path d="M70,70 C70,67 76,64 90,64 L108,63 C122,63 130,67 130,71 L123,158 L76,156 Z"/>
+                <path d="M72,74 C58,95 44,128 40,155 L55,160 C58,135 70,104 82,83 Z"/>
+                <path d="M128,72 C141,89 150,116 153,143 L138,148 C136,124 128,99 118,82 Z"/>
+                <path d="M79,156 C76,200 72,242 70,270 L86,273 C88,244 92,202 93,156 Z"/>
+                <path d="M121,158 C123,202 128,244 130,270 L114,268 C113,242 110,200 108,156 Z"/>
+                <ellipse class="foot-l" cx="78" cy="271" rx="16" ry="6"/>
+                <ellipse class="foot-r" cx="122" cy="269" rx="16" ry="6"/>
+              </g>
+
+              <!-- POSE: GOALKEEPER (wide, arms out) -->
+              <g class="pose pose-gk">
+                <circle cx="100" cy="40" r="22"/>
+                <rect x="91" y="60" width="18" height="11" rx="3"/>
+                <path d="M62,70 C62,66 72,62 88,62 L112,62 C128,62 138,66 138,70 L128,158 L72,158 Z"/>
+                <path d="M64,72 C50,68 25,64 8,62 L6,76 C24,77 50,82 68,90 Z"/>
+                <path d="M136,72 C150,68 175,64 192,62 L194,76 C176,77 150,82 132,90 Z"/>
+                <path d="M76,156 C72,200 65,244 60,270 L78,273 C82,248 88,204 90,156 Z"/>
+                <path d="M124,156 C128,200 135,244 140,270 L122,273 C118,248 112,204 110,156 Z"/>
+                <ellipse class="foot-l" cx="69" cy="272" rx="18" ry="6"/>
+                <ellipse class="foot-r" cx="131" cy="272" rx="18" ry="6"/>
+              </g>
+            </svg>
+
+            <!-- Floating stat badges (visible on step 3) -->
+            <div class="stat-badges">
+              <div class="stat-badge-fl badge-ht" id="badge-ht">
+                <span class="badge-lbl">HT</span>
+                <span class="badge-val" id="badge-ht-val">5'10"</span>
+              </div>
+              <div class="stat-badge-fl badge-wt" id="badge-wt">
+                <span class="badge-lbl">WT</span>
+                <span class="badge-val" id="badge-wt-val">175 lb</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="silhouette-glow"></div>
+          <div class="silhouette-nametag" id="silhouette-nametag"></div>
+        </div>
+
+        <!-- Input column with 4 sub-steps -->
+        <div class="input-col">
+
+          <!-- Sub-step progress dots -->
+          <div class="id-progress">
+            <div class="id-dot active" id="id-dot-1"></div>
+            <div class="id-dot"        id="id-dot-2"></div>
+            <div class="id-dot"        id="id-dot-3"></div>
+            <div class="id-dot"        id="id-dot-4"></div>
+          </div>
+
+          <!-- ── Sub-step 1: Name ── -->
+          <div class="id-substep active" id="id-sub-1">
+            <div class="step-badge">Step 01</div>
+            <h2 class="step-headline">What's your <span class="text-primary">name?</span></h2>
+            <p class="section-sub">Your profile starts here.</p>
+            <div>
+              <input type="text" class="hero-input" id="athlete-name"
+                     placeholder="ENTER YOUR NAME…" autocomplete="off" maxlength="50"/>
+            </div>
+            <div class="field-hint" id="name-hint">
+              <span class="material-symbols-outlined">auto_awesome</span>
+              Your silhouette is taking shape!
+            </div>
+          </div>
+
+          <!-- ── Sub-step 2: Position ── -->
+          <div class="id-substep" id="id-sub-2">
+            <div class="step-badge secondary">Step 02</div>
+            <h2 class="step-headline">What <span class="text-secondary">position</span> do you play?</h2>
+            <p class="section-sub">Your silhouette shifts to match your role.</p>
+            <div class="position-grid" id="position-grid">
+              <button class="pos-card" data-pos="Forward">
+                <span class="material-symbols-outlined pos-icon">sports_soccer</span>
+                <span class="pos-name">FORWARD</span>
+                <span class="pos-sub">Striker / CF / Wing</span>
+              </button>
+              <button class="pos-card" data-pos="Midfielder">
+                <span class="material-symbols-outlined pos-icon">hub</span>
+                <span class="pos-name">MIDFIELDER</span>
+                <span class="pos-sub">CM / CAM / CDM</span>
+              </button>
+              <button class="pos-card" data-pos="Defender">
+                <span class="material-symbols-outlined pos-icon">shield</span>
+                <span class="pos-name">DEFENDER</span>
+                <span class="pos-sub">CB / LB / RB</span>
+              </button>
+              <button class="pos-card" data-pos="Goalkeeper">
+                <span class="material-symbols-outlined pos-icon">pan_tool</span>
+                <span class="pos-name">GOALKEEPER</span>
+                <span class="pos-sub">GK / Shot Stopper</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Sub-step 3: Build ── -->
+          <div class="id-substep" id="id-sub-3">
+            <div class="step-badge tertiary">Step 03</div>
+            <h2 class="step-headline">Adjust your <span class="text-tertiary">build</span></h2>
+            <p class="section-sub">Coaches need your physical profile.</p>
+
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="label-xs">HEIGHT</span>
+                <span class="slider-val" id="height-display">5'10"</span>
+              </div>
+              <input type="range" class="custom-slider" id="height-slider" min="60" max="84" value="70" step="1"/>
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="label-xs">WEIGHT</span>
+                <span class="slider-val" id="weight-display">175 LBS</span>
+              </div>
+              <input type="range" class="custom-slider" id="weight-slider" min="100" max="300" value="175" step="5"/>
+            </div>
+
+            <div class="jersey-group">
+              <span class="label-xs">JERSEY NUMBER</span>
+              <div class="jersey-row">
+                <input type="text" class="jersey-input" id="jersey-input"
+                       placeholder="00" maxlength="2" inputmode="numeric"/>
+                <span class="jersey-hint">Shows on your silhouette</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Sub-step 4: Dominant Foot ── -->
+          <div class="id-substep" id="id-sub-4">
+            <div class="step-badge">Step 04</div>
+            <h2 class="step-headline">Which foot do you <span class="text-primary">prefer?</span></h2>
+            <p class="section-sub">Complete your physical identity.</p>
+            <div class="foot-grid" id="foot-grid">
+              <button class="foot-card" data-foot="Left">
+                <span class="material-symbols-outlined foot-icon">footprint</span>
+                <span class="foot-lbl">LEFT</span>
+              </button>
+              <button class="foot-card" data-foot="Right">
+                <span class="material-symbols-outlined foot-icon">footprint</span>
+                <span class="foot-lbl">RIGHT</span>
+              </button>
+              <button class="foot-card" data-foot="Both">
+                <span class="material-symbols-outlined foot-icon">compare_arrows</span>
+                <span class="foot-lbl">BOTH</span>
+              </button>
+            </div>
+            <div class="achievement" id="identity-achievement">
+              <span class="material-symbols-outlined">emoji_events</span>
+              <span>Identity locked in! +28% Profile Strength</span>
+            </div>
+          </div>
+
+        </div><!-- /input-col -->
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────
+         SCREEN 2 · STATS METHOD
+    ───────────────────────────── -->
+    <section class="screen" data-screen="stats-method" id="screen-stats-method">
+      <div class="max-w-md col-gap-lg">
+        <div>
+          <div class="step-badge secondary">Your Season</div>
+          <h2 class="step-headline">How do you want to show your <span class="text-secondary">performance?</span></h2>
+          <p class="section-sub" style="margin-top:10px;">Choose the method that best represents your game.</p>
+        </div>
+        <div class="method-cards" id="method-cards">
+          <button class="method-card" data-method="link" id="method-link">
+            <div class="method-icon"><span class="material-symbols-outlined">link</span></div>
+            <div class="method-body">
+              <div class="method-title">Paste a link</div>
+              <p class="method-desc">Import verified stats from Hudl, MaxPreps, or your team portal instantly.</p>
+              <div class="method-tags">
+                <span class="tag-pill">Hudl</span>
+                <span class="tag-pill">MaxPreps</span>
+                <span class="tag-pill">Portal</span>
+              </div>
+            </div>
+            <span class="method-check material-symbols-outlined">check_circle</span>
+          </button>
+          <button class="method-card" data-method="manual" id="method-manual">
+            <div class="method-icon"><span class="material-symbols-outlined">edit_note</span></div>
+            <div class="method-body">
+              <div class="method-title">Enter manually</div>
+              <p class="method-desc">Hand-input your season totals for full control over your stats story.</p>
+              <div class="method-tags">
+                <span class="tag-pill">Full Control</span>
+                <span class="tag-pill">Custom</span>
+              </div>
+            </div>
+            <span class="method-check material-symbols-outlined">check_circle</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────
+         SCREEN 3 · STATS ENTRY
+         (one panel shown at a time)
+    ───────────────────────────── -->
+    <section class="screen" data-screen="stats" id="screen-stats">
+      <div class="max-w-lg col-gap-lg">
+
+        <!-- LINK panel -->
+        <div id="stats-link-panel" class="col-gap-lg hidden">
+          <div>
+            <div class="step-badge secondary" style="margin-bottom:8px;">Link Import</div>
+            <h2 class="step-headline">Paste your <span class="text-secondary">stats link</span></h2>
+            <p class="section-sub" style="margin-top:10px;">We'll pull your verified stats automatically.</p>
+          </div>
+          <div class="col-gap-md">
+            <div class="link-input-wrap">
+              <span class="material-symbols-outlined">link</span>
+              <input type="url" class="link-text-input" id="stats-link-url"
+                     placeholder="https://hudl.com/profile/your-profile"/>
+            </div>
+            <div class="platform-row">
+              <span class="platform-chip">Hudl</span>
+              <span class="platform-chip">MaxPreps</span>
+              <span class="platform-chip">SportsEngine</span>
+            </div>
+            <div class="link-success" id="link-success">
+              <span class="material-symbols-outlined">check_circle</span>
+              <div>
+                <div class="success-t">Stats Imported!</div>
+                <div class="success-s">15 data points pulled successfully</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FIELD PLAYER panel -->
+        <div id="stats-field-panel" class="col-gap-lg hidden">
+          <div>
+            <div class="step-badge secondary" style="margin-bottom:8px;">Stats Engine</div>
+            <h2 class="step-headline">Your <span class="text-secondary">season</span> in numbers</h2>
+            <p class="section-sub" style="margin-top:10px;">Start with the foundation — more fields unlock as you go.</p>
+          </div>
+          <div class="stat-foundation">
+            <span class="label-xs">Season Foundation</span>
+            <div class="stat-q">How many games did you play?</div>
+            <div class="big-input-row">
+              <input type="number" class="big-number" id="games-field" placeholder="00" min="0" max="99"/>
+              <span class="big-unit">Games</span>
+            </div>
+          </div>
+          <div class="stats-grid" id="field-stats-grid">
+            <div class="stat-card lime" id="sc-goals">
+              <div class="stat-card-top">
+                <span class="material-symbols-outlined sc-icon">sports_soccer</span>
+                <span class="sc-season">Season Total</span>
+              </div>
+              <div class="sc-name">Goals</div>
+              <input type="number" class="stat-in" data-key="goals" placeholder="0" min="0"/>
+              <span class="material-symbols-outlined sc-bg-icon">sports_soccer</span>
+            </div>
+            <div class="stat-card cyan" id="sc-assists">
+              <div class="stat-card-top">
+                <span class="material-symbols-outlined sc-icon">connecting_airports</span>
+                <span class="sc-season">Season Total</span>
+              </div>
+              <div class="sc-name">Assists</div>
+              <input type="number" class="stat-in" data-key="assists" placeholder="0" min="0"/>
+              <span class="material-symbols-outlined sc-bg-icon">connecting_airports</span>
+            </div>
+            <div class="stat-card orange" id="sc-shots">
+              <div class="stat-card-top">
+                <span class="material-symbols-outlined sc-icon">target</span>
+                <span class="sc-season">Season Total</span>
+              </div>
+              <div class="sc-name">Shots on Goal</div>
+              <input type="number" class="stat-in" data-key="shots" placeholder="0" min="0"/>
+              <span class="material-symbols-outlined sc-bg-icon">target</span>
+            </div>
+            <div class="stat-card lime" id="sc-minutes">
+              <div class="stat-card-top">
+                <span class="material-symbols-outlined sc-icon">timer</span>
+                <span class="sc-season">Total</span>
+              </div>
+              <div class="sc-name">Minutes Played</div>
+              <input type="number" class="stat-in" data-key="minutes" placeholder="0" min="0"/>
+              <span class="material-symbols-outlined sc-bg-icon">timer</span>
+            </div>
+            <div class="stat-card cyan" id="sc-pass">
+              <div class="stat-card-top">
+                <span class="material-symbols-outlined sc-icon">percent</span>
+                <span class="sc-season">Average</span>
+              </div>
+              <div class="sc-name">Pass Accuracy</div>
+              <input type="number" class="stat-in" data-key="passAcc" placeholder="0" min="0" max="100" step="0.1"/>
+              <span class="material-symbols-outlined sc-bg-icon">percent</span>
+            </div>
+            <div class="stat-card orange" id="sc-tackles">
+              <div class="stat-card-top">
+                <span class="material-symbols-outlined sc-icon">sports_kabaddi</span>
+                <span class="sc-season">Per Game</span>
+              </div>
+              <div class="sc-name">Tackles p/g</div>
+              <input type="number" class="stat-in" data-key="tackles" placeholder="0.0" min="0" step="0.1"/>
+              <span class="material-symbols-outlined sc-bg-icon">sports_kabaddi</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- GK panel -->
+        <div id="stats-gk-panel" class="col-gap-lg hidden">
+          <div>
+            <div class="step-badge secondary" style="margin-bottom:8px;">GK Specialist</div>
+            <h2 class="step-headline">Goalkeeper <span class="text-secondary">stats</span></h2>
+            <p class="section-sub" style="margin-top:10px;">Numbers that define the last line of defense.</p>
+          </div>
+          <div class="stat-foundation">
+            <span class="label-xs">Season Foundation</span>
+            <div class="stat-q">How many games did you play?</div>
+            <div class="big-input-row">
+              <input type="number" class="big-number" id="games-gk" placeholder="00" min="0" max="99"/>
+              <span class="big-unit">Games</span>
+            </div>
+          </div>
+          <div class="stats-grid" id="gk-stats-grid">
+            <div class="stat-card lime" id="sc-saves">
+              <div class="stat-card-top">
+                <span class="material-symbols-outlined sc-icon">pan_tool</span>
+                <span class="sc-season">Season Total</span>
+              </div>
+              <div class="sc-name">Saves</div>
+              <input type="number" class="stat-in" data-key="saves" placeholder="0" min="0"/>
+              <span class="material-symbols-outlined sc-bg-icon">pan_tool</span>
+            </div>
+            <div class="stat-card cyan" id="sc-cs">
+              <div class="stat-card-top">
+                <span class="material-symbols-outlined sc-icon">verified</span>
+                <span class="sc-season">Shutouts</span>
+              </div>
+              <div class="sc-name">Clean Sheets</div>
+              <input type="number" class="stat-in" data-key="cleanSheets" placeholder="0" min="0"/>
+              <span class="material-symbols-outlined sc-bg-icon">verified</span>
+            </div>
+            <div class="stat-card orange" id="sc-gaa">
+              <div class="stat-card-top">
+                <span class="material-symbols-outlined sc-icon">trending_down</span>
+                <span class="sc-season">Average</span>
+              </div>
+              <div class="sc-name">GAA</div>
+              <input type="number" class="stat-in" data-key="gaa" placeholder="0.00" min="0" step="0.01"/>
+              <span class="material-symbols-outlined sc-bg-icon">trending_down</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────
+         SCREEN 4 · HIGHLIGHTS
+    ───────────────────────────── -->
+    <section class="screen" data-screen="highlights" id="screen-highlights">
+      <div class="max-w-md col-gap-lg">
+        <div>
+          <div class="step-badge">Show Your Game</div>
+          <h2 class="step-headline">Add your <span class="text-primary">best moments</span></h2>
+          <div class="nudge-bar" style="margin-top:12px;">
+            <span class="material-symbols-outlined">trending_up</span>
+            Profiles with 2+ highlights get 40% more recruiter views
+          </div>
+        </div>
+        <div class="cards-container" id="highlights-container"></div>
+        <button class="add-card-btn" id="add-highlight-btn">
+          <span class="material-symbols-outlined">add</span>
+          Add Another Highlight
+        </button>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────
+         SCREEN 5 · ACADEMICS
+    ───────────────────────────── -->
+    <section class="screen" data-screen="academics" id="screen-academics">
+      <div class="max-w-sm col-gap-lg">
+        <div>
+          <div class="step-badge secondary">Academics</div>
+          <h2 class="step-headline">Boost your profile with <span class="text-secondary">academics?</span></h2>
+          <p class="section-sub" style="margin-top:10px;">Coaches look for student-athletes who excel in the classroom too.</p>
+        </div>
+
+        <div class="choice-row">
+          <button class="choice-btn choice-yes" id="acad-yes">
+            <span class="material-symbols-outlined">school</span>
+            YES, SHOW GPA
+          </button>
+          <button class="choice-btn choice-skip" id="acad-skip">
+            <span class="material-symbols-outlined">arrow_forward</span>
+            SKIP FOR NOW
+          </button>
+        </div>
+
+        <div class="conditional-panel hidden" id="academics-fields">
+          <div class="reveal-grid">
+            <div class="field-group">
+              <span class="label-xs">CUMULATIVE GPA</span>
+              <input type="text" class="field-input" id="gpa-input" placeholder="e.g., 3.8" maxlength="4"/>
+            </div>
+            <div class="field-group">
+              <span class="label-xs">NCAA ELIGIBILITY ID</span>
+              <input type="text" class="field-input" id="ncaa-input" placeholder="Optional"/>
+            </div>
+            <div class="field-group full-col">
+              <span class="label-xs">INTENDED MAJOR</span>
+              <input type="text" class="field-input" id="major-input" placeholder="e.g., Sports Management"/>
+            </div>
+          </div>
+          <div class="honors-wrap" style="margin-top:4px;">
+            <span class="label-xs">HONORS &amp; AWARDS</span>
+            <div class="honors-pool" id="honors-pool" style="margin-top:8px;">
+              <button class="honor-chip" data-honor="Honor Roll">Honor Roll</button>
+              <button class="honor-chip" data-honor="AP Scholar">AP Scholar</button>
+              <button class="honor-chip" data-honor="NHS">Nat'l Honor Society</button>
+              <button class="honor-chip" data-honor="Valedictorian">Valedictorian</button>
+              <button class="honor-chip" data-honor="Academic All-State">Academic All-State</button>
+              <button class="honor-chip" data-honor="Salutatorian">Salutatorian</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────
+         SCREEN 6 · BEYOND THE FIELD
+    ───────────────────────────── -->
+    <section class="screen" data-screen="experience" id="screen-experience">
+      <div class="max-w-md col-gap-lg">
+        <div>
+          <div class="step-badge tertiary">Beyond the Field</div>
+          <h2 class="step-headline">What else should coaches <span class="text-tertiary">know about you?</span></h2>
+          <p class="section-sub" style="margin-top:10px;">Activities, volunteer work, and experience that define you off the field.</p>
+        </div>
+        <div class="cards-container" id="experience-container"></div>
+        <button class="add-card-btn" id="add-experience-btn">
+          <span class="material-symbols-outlined">add</span>
+          Add Another Activity
+        </button>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────
+         SCREEN 7 · TESTIMONIALS
+    ───────────────────────────── -->
+    <section class="screen" data-screen="testimonials" id="screen-testimonials">
+      <div class="max-w-sm col-gap-lg">
+        <div>
+          <div class="step-badge">Social Proof</div>
+          <h2 class="step-headline">Does a coach or mentor <span class="text-primary">vouch for you?</span></h2>
+          <p class="section-sub" style="margin-top:10px;">A real quote adds serious credibility to your profile.</p>
+        </div>
+
+        <div class="choice-row">
+          <button class="choice-btn choice-yes" id="test-yes">
+            <span class="material-symbols-outlined">format_quote</span>
+            YES, ADD A QUOTE
+          </button>
+          <button class="choice-btn choice-skip" id="test-skip">
+            <span class="material-symbols-outlined">arrow_forward</span>
+            SKIP FOR NOW
+          </button>
+        </div>
+
+        <div class="conditional-panel hidden" id="testimonials-fields">
+          <div class="cards-container" id="testimonials-container"></div>
+          <button class="add-card-btn" id="add-testimonial-btn" style="margin-top:14px;">
+            <span class="material-symbols-outlined">add</span>
+            Add Another Reference
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────
+         SCREEN 8 · PERSONALITY
+    ───────────────────────────── -->
+    <section class="screen" data-screen="personality" id="screen-personality">
+      <div class="max-w-sm col-gap-lg">
+        <div>
+          <div class="step-badge secondary">Your Identity</div>
+          <h2 class="step-headline">How would you <span class="text-secondary">describe yourself?</span></h2>
+          <p class="section-sub" style="margin-top:10px;">Pick up to 5 tags that define you as an athlete and a person.</p>
+        </div>
+        <div class="personality-pool" id="personality-pool">
+          <button class="p-tag" data-tag="Leader">Leader</button>
+          <button class="p-tag" data-tag="Coachable">Coachable</button>
+          <button class="p-tag" data-tag="Determined">Determined</button>
+          <button class="p-tag" data-tag="Team Player">Team Player</button>
+          <button class="p-tag" data-tag="Creative">Creative</button>
+          <button class="p-tag" data-tag="Competitive">Competitive</button>
+          <button class="p-tag" data-tag="Disciplined">Disciplined</button>
+          <button class="p-tag" data-tag="Resilient">Resilient</button>
+          <button class="p-tag" data-tag="Versatile">Versatile</button>
+          <button class="p-tag" data-tag="Tactical IQ">Tactical IQ</button>
+          <button class="p-tag" data-tag="Passionate">Passionate</button>
+          <button class="p-tag" data-tag="Humble">Humble</button>
+          <button class="p-tag" data-tag="Motivator">Motivator</button>
+          <button class="p-tag" data-tag="Work Ethic">Work Ethic</button>
+          <button class="p-tag" data-tag="Student First">Student First</button>
+        </div>
+        <div class="tag-count-label"><span id="tag-count">0</span> / 5 selected</div>
+        <div class="custom-tag-row">
+          <input type="text" class="field-input" id="custom-tag-input"
+                 placeholder="Add your own word…" maxlength="20"/>
+          <button class="add-tag-btn" id="add-tag-btn">
+            <span class="material-symbols-outlined">add</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────
+         SCREEN 9 · MEDIA & PRIVACY
+    ───────────────────────────── -->
+    <section class="screen" data-screen="media" id="screen-media">
+      <div class="max-w-sm col-gap-lg">
+        <div>
+          <div class="step-badge">Media &amp; Privacy</div>
+          <h2 class="step-headline">Add your <span class="text-primary">profile photo</span></h2>
+          <p class="section-sub" style="margin-top:10px;">A photo increases profile views by 3×. Totally optional.</p>
+        </div>
+
+        <div class="photo-row">
+          <label for="photo-file" class="photo-circle" id="photo-circle">
+            <span class="material-symbols-outlined" id="photo-placeholder-icon">person</span>
+            <img id="photo-actual" class="photo-actual" alt="Profile photo"/>
+          </label>
+          <div class="photo-actions">
+            <label for="photo-file" class="upload-label">
+              <span class="material-symbols-outlined">cloud_upload</span>
+              Choose Photo
+            </label>
+            <input type="file" id="photo-file" accept="image/*" style="display:none;"/>
+            <p class="upload-hint">JPG / PNG · max 5 MB · optional</p>
+          </div>
+        </div>
+
+        <div class="privacy-section">
+          <div class="privacy-title">Privacy Settings</div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-lbl">Show stats publicly?</span>
+              <span class="toggle-sub">Coaches can view your performance data</span>
+            </div>
+            <div class="toggle-switch on" id="toggle-stats" role="switch" aria-checked="true" tabindex="0">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-lbl">Show photo publicly?</span>
+              <span class="toggle-sub">Your picture is visible to coaches</span>
+            </div>
+            <div class="toggle-switch on" id="toggle-photo" role="switch" aria-checked="true" tabindex="0">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────
+         SCREEN 10 · CONTACT
+    ───────────────────────────── -->
+    <section class="screen" data-screen="contact" id="screen-contact">
+      <div class="max-w-sm col-gap-lg">
+        <div>
+          <div class="step-badge secondary">Contact Channels</div>
+          <h2 class="step-headline">How can coaches <span class="text-secondary">reach you?</span></h2>
+          <p class="section-sub" style="margin-top:10px;">Make it easy for the right people to connect with you.</p>
+        </div>
+        <div class="contact-form">
+          <div class="contact-field">
+            <span class="label-xs">EMAIL ADDRESS</span>
+            <div class="contact-input-wrap">
+              <span class="material-symbols-outlined contact-icon">email</span>
+              <input type="email" class="contact-in" id="contact-email" placeholder="athlete@email.com"/>
+            </div>
+          </div>
+          <div class="contact-row">
+            <div class="contact-field">
+              <span class="label-xs">PHONE NUMBER</span>
+              <div class="contact-input-wrap">
+                <span class="material-symbols-outlined contact-icon">phone</span>
+                <input type="tel" class="contact-in" id="contact-phone" placeholder="+1 (555) 000-0000"/>
+              </div>
+            </div>
+            <div class="contact-field">
+              <span class="label-xs">INSTAGRAM</span>
+              <div class="contact-input-wrap">
+                <span class="material-symbols-outlined contact-icon">photo_camera</span>
+                <input type="text" class="contact-in" id="contact-instagram" placeholder="@handle"/>
+              </div>
+            </div>
+          </div>
+          <div class="contact-field">
+            <span class="label-xs">PARENT / GUARDIAN EMAIL <span class="opt-badge">Optional</span></span>
+            <div class="contact-input-wrap">
+              <span class="material-symbols-outlined contact-icon">family_restroom</span>
+              <input type="email" class="contact-in" id="contact-parent" placeholder="parent@email.com"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────
+         SCREEN 11 · CONFIRMATION
+    ───────────────────────────── -->
+    <section class="screen" data-screen="confirmation" id="screen-confirmation">
+      <div class="confirm-screen">
+
+        <!-- Completion hero -->
+        <div class="complete-hero">
+          <div class="complete-ring-wrap">
+            <div class="ring-wrap size-lg">
+              <svg class="ring-svg" viewBox="0 0 144 144">
+                <circle class="ring-track" cx="72" cy="72" r="64" fill="none" stroke-width="8"/>
+                <circle class="ring-fill cyan" id="confirm-ring"
+                        cx="72" cy="72" r="64" fill="none" stroke-width="8"
+                        stroke-dasharray="402" stroke-dashoffset="402"/>
+              </svg>
+              <div class="ring-center">
+                <span class="material-symbols-outlined ring-verified">verified</span>
+              </div>
+            </div>
+          </div>
+          <div class="complete-text">
+            <span class="elite-badge">ELITE</span>
+            <div class="complete-pct" id="confirm-pct-text">0% COMPLETE</div>
+            <p class="complete-sub">Your athletic identity is fully defined. Review before publishing.</p>
+          </div>
+        </div>
+
+        <!-- Summary bento -->
+        <div class="bento-grid">
+          <!-- Identity -->
+          <div class="bento-card bento-full">
+            <span class="bento-lbl">Identity</span>
+            <div class="sum-athlete">
+              <div class="sum-avatar" id="sum-avatar">
+                <span class="material-symbols-outlined">person</span>
+              </div>
+              <div class="sum-info">
+                <div class="sum-name" id="sum-name">—</div>
+                <div class="sum-chips">
+                  <span class="sum-chip"  id="sum-position">—</span>
+                  <span class="sum-chip cyan" id="sum-foot">—</span>
+                </div>
+              </div>
+              <div class="sum-jersey" id="sum-jersey">#—</div>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="bento-card">
+            <span class="bento-lbl">Season Stats</span>
+            <div class="sum-stats-row">
+              <div class="sum-stat">
+                <span class="sum-stat-val" id="sum-gp">—</span>
+                <span class="sum-stat-lbl">GP</span>
+              </div>
+              <div class="sum-stat">
+                <span class="sum-stat-val text-primary" id="sum-stat1">—</span>
+                <span class="sum-stat-lbl" id="sum-lbl1">G</span>
+              </div>
+              <div class="sum-stat">
+                <span class="sum-stat-val text-secondary" id="sum-stat2">—</span>
+                <span class="sum-stat-lbl" id="sum-lbl2">A</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Personality -->
+          <div class="bento-card">
+            <span class="bento-lbl">Identity Tags</span>
+            <div class="sum-tags" id="sum-tags"></div>
+          </div>
+
+          <!-- Contact -->
+          <div class="bento-card bento-full">
+            <span class="bento-lbl">Contact</span>
+            <div class="contact-preview">
+              <div class="cp-row">
+                <span class="material-symbols-outlined cp-icon">email</span>
+                <span class="cp-val" id="sum-email">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confirm checkbox -->
+        <div class="confirm-check">
+          <label class="check-lbl" for="confirm-cb">
+            <div style="position:relative;flex-shrink:0;margin-top:2px;">
+              <input type="checkbox" class="real-cb" id="confirm-cb"/>
+              <div class="cb-visual">
+                <span class="material-symbols-outlined cb-check">check</span>
+              </div>
+            </div>
+            <span class="cb-text">I confirm all information is accurate and belongs to me.</span>
+          </label>
+        </div>
+
+        <!-- Publish CTA -->
+        <button class="btn-cta publish-btn" id="publish-btn" disabled>
+          <span class="material-symbols-outlined">bolt</span>
+          PUBLISH PROFILE
+        </button>
+
+      </div>
+    </section>
+
+  </div><!-- /steps-area -->
+
+  <!-- ─────────────────────────────
+       PREVIEW PANEL (right sidebar)
+  ───────────────────────────── -->
+  <aside class="preview-panel" id="preview-panel">
+
+    <!-- Strength ring + bar -->
+    <div class="preview-strength-block">
+      <div class="ring-wrap size-md">
+        <svg class="ring-svg" viewBox="0 0 80 80">
+          <circle class="ring-track" cx="40" cy="40" r="34" fill="none" stroke-width="5"/>
+          <circle class="ring-fill cyan" id="preview-ring"
+                  cx="40" cy="40" r="34" fill="none" stroke-width="5"
+                  stroke-dasharray="214" stroke-dashoffset="214"/>
+        </svg>
+        <div class="ring-center">
+          <span class="ring-pct-text" id="preview-pct">0%</span>
+        </div>
+      </div>
+      <div class="preview-strength-info">
+        <span class="psi-lbl">Profile Strength</span>
+        <div class="strength-bar">
+          <div class="strength-bar-fill" id="strength-bar-fill"></div>
+        </div>
+        <span class="strength-lbl-level" id="strength-level">Just Starting</span>
+      </div>
+    </div>
+
+    <!-- Mini profile card -->
+    <div class="mini-card">
+      <div class="mini-top">
+        <div class="mini-avatar" id="mini-avatar">
+          <span class="material-symbols-outlined">person</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div class="mini-name" id="mini-name">YOUR NAME</div>
+          <div class="mini-badges">
+            <span class="mini-badge"      id="mini-pos-badge">Position</span>
+            <span class="mini-badge cyan" id="mini-foot-badge">Foot</span>
+          </div>
+        </div>
+        <div class="mini-jersey-num" id="mini-jersey">#</div>
+      </div>
+      <div class="mini-stats-row">
+        <div class="mini-stat">
+          <span class="mini-stat-val"              id="mini-gp">--</span>
+          <span class="mini-stat-lbl">GP</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-val text-primary"   id="mini-s1">--</span>
+          <span class="mini-stat-lbl"                id="mini-l1">G</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-val text-secondary" id="mini-s2">--</span>
+          <span class="mini-stat-lbl"                id="mini-l2">A</span>
+        </div>
+      </div>
+      <div class="mini-p-tags" id="mini-tags"></div>
+    </div>
+
+    <!-- Completion checklist -->
+    <div class="checklist">
+      <div class="cl-item" id="cl-identity">
+        <span class="material-symbols-outlined cl-icon">radio_button_unchecked</span>
+        <span class="cl-lbl">Identity</span>
+      </div>
+      <div class="cl-item" id="cl-stats">
+        <span class="material-symbols-outlined cl-icon">radio_button_unchecked</span>
+        <span class="cl-lbl">Season Stats</span>
+      </div>
+      <div class="cl-item" id="cl-highlights">
+        <span class="material-symbols-outlined cl-icon">radio_button_unchecked</span>
+        <span class="cl-lbl">Highlights</span>
+      </div>
+      <div class="cl-item" id="cl-academics">
+        <span class="material-symbols-outlined cl-icon">radio_button_unchecked</span>
+        <span class="cl-lbl">Academics</span>
+      </div>
+      <div class="cl-item" id="cl-contact">
+        <span class="material-symbols-outlined cl-icon">radio_button_unchecked</span>
+        <span class="cl-lbl">Contact Info</span>
+      </div>
+    </div>
+
+  </aside>
+
+</div><!-- /app-shell -->
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn nav-back" id="nav-back">
+    <span class="material-symbols-outlined">arrow_back</span>
+    <span>BACK</span>
+  </button>
+  <div class="progress-dots" id="progress-dots"></div>
+  <button class="nav-btn nav-next" id="nav-next">
+    <span class="material-symbols-outlined">arrow_forward</span>
+    <span>NEXT</span>
+  </button>
+</nav>
+
+<!-- Mobile: floating preview button -->
+<button class="preview-fab" id="preview-fab">
+  <span class="material-symbols-outlined">analytics</span>
+  <span class="fab-pct" id="fab-pct">0%</span>
+</button>
+<div class="preview-overlay" id="preview-overlay"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
