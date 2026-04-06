@@ -53,8 +53,10 @@ const state = {
   // Personality
   personalityTags: [],
 
-  // Media
+  // Media (preview / fallback: photoDataUrl; persisted URL: photoStorageUrl)
   photoDataUrl: null,
+  photoStorageUrl: null,
+  photoObjectUrl: null,
   statsPublic:  true,
   photoPublic:  true,
 
@@ -320,11 +322,17 @@ function addHighlightCard() {
         <textarea rows="3" placeholder="Tell the story behind this moment…"></textarea>
       </div>
       <div class="card-field">
+        <label>MEDIA URL <span style="opacity:.45;font-size:.55rem;">(OPTIONAL)</span></label>
+        <input type="url" class="field-input highlight-media-url" placeholder="https://youtube.com/..."/>
+      </div>
+      <div class="card-field">
         <label>MEDIA <span style="opacity:.45;font-size:.55rem;">(OPTIONAL)</span></label>
-        <div class="media-drop">
+        <input type="file" class="highlight-file-input" accept="image/*,video/*" style="display:none;" aria-hidden="true"/>
+        <div class="media-drop" tabindex="0" role="button" aria-label="Upload highlight video or image">
           <span class="material-symbols-outlined">cloud_upload</span>
-          <span class="media-drop-label">Upload video or paste YouTube link</span>
+          <span class="media-drop-label">Click or drop video / image (max 50 MB)</span>
         </div>
+        <p class="highlight-upload-status" aria-live="polite"></p>
       </div>
     </div>`;
 
@@ -334,6 +342,7 @@ function addHighlightCard() {
     updateStrength();
   });
 
+  wireHighlightMedia(card, id);
   $('highlights-container').appendChild(card);
   updateStrength();
 }
@@ -452,7 +461,7 @@ function calcStrength() {
   if (state.experience.length >= 1) p += 5;
   if (state.testimonials.length >= 1) p += 7;
   if (state.personalityTags.length >= 3) p += 7;
-  if (state.photoDataUrl) p += 8;
+  if (state.photoDataUrl || state.photoStorageUrl) p += 8;
   if (state.email)        p += 8;
   return Math.min(p, 100);
 }
@@ -559,8 +568,9 @@ function refreshMiniCard() {
 
   const av = gEl('mini-avatar');
   if (av) {
-    av.innerHTML = state.photoDataUrl
-      ? `<img src="${state.photoDataUrl}" alt="Profile"/>`
+    const src = state.photoStorageUrl || state.photoDataUrl;
+    av.innerHTML = src
+      ? `<img src="${src}" alt="Profile"/>`
       : `<span class="material-symbols-outlined">person</span>`;
   }
 }
@@ -594,10 +604,346 @@ function buildConfirmation() {
 
   const av = $('sum-avatar');
   if (av) {
-    av.innerHTML = state.photoDataUrl
-      ? `<img src="${state.photoDataUrl}" alt="Photo"/>`
+    const src = state.photoStorageUrl || state.photoDataUrl;
+    av.innerHTML = src
+      ? `<img src="${src}" alt="Photo"/>`
       : `<span class="material-symbols-outlined">person</span>`;
   }
+}
+
+// ──────────────────────────────────────────────────────────────
+// SUPABASE INTAKE (column names match ogform.html → "Student Athlete Intake Form CSV")
+// ──────────────────────────────────────────────────────────────
+const INTAKE_TABLE = 'Student Athlete Intake Form CSV';
+
+function getSupabaseClient() {
+  const url = window.SUPABASE_URL;
+  const key = window.SUPABASE_ANON_KEY;
+  if (!url || !key || typeof supabase === 'undefined') return null;
+  return supabase.createClient(url, key);
+}
+
+function getIntakeStorageBucket() {
+  return window.SUPABASE_STORAGE_BUCKET || 'athlete-intake';
+}
+
+/**
+ * Uploads to Supabase Storage and returns the bucket’s public URL.
+ * Create a public bucket named in SUPABASE_STORAGE_BUCKET (default athlete-intake)
+ * with policies allowing anon INSERT and public SELECT on objects.
+ */
+async function uploadToIntakeStorage(client, folder, file) {
+  const bucket = getIntakeStorageBucket();
+  const rawExt = file.name && file.name.includes('.') ? file.name.split('.').pop() : '';
+  const ext = rawExt.replace(/[^a-z0-9]/gi, '').slice(0, 8).toLowerCase() || 'bin';
+  const path = `${folder.replace(/^\/+|\/+$/g, '')}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+  const { data, error } = await client.storage.from(bucket).upload(path, file, {
+    contentType: file.type || undefined,
+    upsert: false,
+  });
+  if (error) throw error;
+  const { data: pub } = client.storage.from(bucket).getPublicUrl(data.path);
+  if (!pub?.publicUrl) throw new Error('Could not resolve public URL for upload.');
+  return pub.publicUrl;
+}
+
+function revokePhotoObjectUrl() {
+  if (state.photoObjectUrl) {
+    URL.revokeObjectURL(state.photoObjectUrl);
+    state.photoObjectUrl = null;
+  }
+}
+
+async function handleProfilePhotoFile(file) {
+  const max = 5 * 1024 * 1024;
+  if (file.size > max) {
+    alert('Photo must be 5 MB or smaller.');
+    return;
+  }
+
+  const img = $('photo-actual');
+  const icon = $('photo-placeholder-icon');
+  const status = $('photo-upload-status');
+
+  revokePhotoObjectUrl();
+  const objUrl = URL.createObjectURL(file);
+  state.photoObjectUrl = objUrl;
+  state.photoDataUrl = null;
+  state.photoStorageUrl = null;
+
+  img.src = objUrl;
+  img.style.display = 'block';
+  icon.style.display = 'none';
+
+  const client = getSupabaseClient();
+  if (!client) {
+    if (status) status.textContent = '';
+    const reader = new FileReader();
+    reader.onload = ev => {
+      state.photoDataUrl = ev.target.result;
+      revokePhotoObjectUrl();
+      img.src = state.photoDataUrl;
+      updateStrength();
+    };
+    reader.readAsDataURL(file);
+    return;
+  }
+
+  if (status) {
+    status.textContent = 'Uploading…';
+    status.classList.remove('upload-err', 'upload-ok');
+  }
+
+  const slug = (state.name || 'athlete').replace(/[^a-z0-9-_]/gi, '-').replace(/-+/g, '-').slice(0, 48) || 'athlete';
+  try {
+    const url = await uploadToIntakeStorage(client, `profiles/${slug}`, file);
+    state.photoStorageUrl = url;
+    state.photoDataUrl = null;
+    revokePhotoObjectUrl();
+    img.src = url;
+    if (status) {
+      status.textContent = 'Uploaded — ready to publish';
+      status.classList.add('upload-ok');
+    }
+    updateStrength();
+  } catch (err) {
+    console.error(err);
+    if (status) {
+      status.textContent = '';
+      status.classList.add('upload-err');
+    }
+    alert(
+      'Photo upload failed: ' + (err.message || err) +
+        '\n\nCreate a public Storage bucket named "' + getIntakeStorageBucket() +
+        '" and allow anonymous uploads (see supabase-config.example.js).'
+    );
+    const reader = new FileReader();
+    reader.onload = ev => {
+      state.photoDataUrl = ev.target.result;
+      img.src = state.photoDataUrl;
+      updateStrength();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+/** If the user only has a data-URL preview, upload once before row insert. */
+async function ensureProfilePhotoUploadedForPublish(client) {
+  if (!client || state.photoStorageUrl || !state.photoDataUrl) return;
+  if (!String(state.photoDataUrl).startsWith('data:')) return;
+  try {
+    const res = await fetch(state.photoDataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], 'profile.jpg', { type: blob.type || 'image/jpeg' });
+    const slug = (state.name || 'athlete').replace(/[^a-z0-9-_]/gi, '-').replace(/-+/g, '-').slice(0, 48) || 'athlete';
+    state.photoStorageUrl = await uploadToIntakeStorage(client, `profiles/${slug}`, file);
+    state.photoDataUrl = null;
+    revokePhotoObjectUrl();
+    const img = $('photo-actual');
+    if (img) img.src = state.photoStorageUrl;
+  } catch (e) {
+    console.warn('Profile photo could not be uploaded before publish', e);
+  }
+}
+
+function wireHighlightMedia(card, hlId) {
+  const fileInput = card.querySelector('.highlight-file-input');
+  const drop = card.querySelector('.media-drop');
+  const urlInput = card.querySelector('.highlight-media-url');
+  const status = card.querySelector('.highlight-upload-status');
+  const label = drop.querySelector('.media-drop-label');
+  if (!fileInput || !drop || !urlInput) return;
+
+  const maxBytes = 50 * 1024 * 1024;
+
+  const runUpload = async (file) => {
+    if (!file) return;
+    if (file.size > maxBytes) {
+      alert('Highlight file must be under 50 MB.');
+      return;
+    }
+    const client = getSupabaseClient();
+    if (!client) {
+      alert('Supabase is not configured. Copy supabase-config.example.js to supabase-config.js.');
+      return;
+    }
+
+    if (status) {
+      status.textContent = 'Uploading…';
+      status.classList.remove('upload-err', 'upload-ok');
+    }
+    drop.classList.add('media-drop-uploading');
+
+    try {
+      const url = await uploadToIntakeStorage(client, `highlights/${hlId}`, file);
+      urlInput.value = url;
+      if (label) label.textContent = file.name;
+      if (status) {
+        status.textContent = 'Uploaded — URL filled above';
+        status.classList.add('upload-ok');
+      }
+    } catch (err) {
+      console.error(err);
+      if (status) {
+        status.textContent = err.message || 'Upload failed';
+        status.classList.add('upload-err');
+      }
+      alert(
+        'Highlight upload failed: ' + (err.message || err) +
+          '\n\nCreate a public Storage bucket named "' + getIntakeStorageBucket() +
+          '" and allow anonymous uploads (see supabase-config.example.js).'
+      );
+    } finally {
+      drop.classList.remove('media-drop-uploading');
+      fileInput.value = '';
+    }
+  };
+
+  drop.addEventListener('click', () => fileInput.click());
+  drop.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+  fileInput.addEventListener('change', e => runUpload(e.target.files[0]));
+
+  ['dragenter', 'dragover'].forEach(evName => {
+    drop.addEventListener(evName, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      drop.classList.add('media-drop-dragover');
+    });
+  });
+  drop.addEventListener('dragleave', e => {
+    e.preventDefault();
+    if (!drop.contains(e.relatedTarget)) drop.classList.remove('media-drop-dragover');
+  });
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    drop.classList.remove('media-drop-dragover');
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) runUpload(f);
+  });
+}
+
+function collectHighlightsForIntake() {
+  return $$('#highlights-container .entry-card').slice(0, 3).map(card => {
+    const texts = card.querySelectorAll('.entry-card-body input[type="text"]');
+    const urlIn = card.querySelector('.highlight-media-url');
+    const ta = card.querySelector('.entry-card-body textarea');
+    return {
+      title: texts[0]?.value?.trim() || '',
+      opponent: texts[1]?.value?.trim() || '',
+      date: texts[2]?.value?.trim() || '',
+      description: ta?.value?.trim() || '',
+      media_url: urlIn?.value?.trim() || '',
+    };
+  });
+}
+
+function collectExperienceForIntake() {
+  return $$('#experience-container .entry-card').slice(0, 3).map(card => {
+    const id = card.dataset.id;
+    const rec = state.experience.find(e => e.id === id);
+    const titleIn = card.querySelector('.entry-card-body input[type="text"]');
+    const descTa = card.querySelector('.entry-card-body textarea');
+    return {
+      type: rec?.type || 'Activity',
+      title: titleIn?.value?.trim() || '',
+      description: descTa?.value?.trim() || '',
+    };
+  });
+}
+
+function collectTestimonialsForIntake() {
+  return $$('#testimonials-container .entry-card').slice(0, 3).map(card => {
+    const texts = card.querySelectorAll('.entry-card-body input[type="text"]');
+    const ta = card.querySelector('.entry-card-body textarea');
+    return {
+      name: texts[0]?.value?.trim() || '',
+      role: texts[1]?.value?.trim() || '',
+      quote: ta?.value?.trim() || '',
+    };
+  });
+}
+
+/** Maps wizard state + cards to Supabase row keys (snake_case) per ogform.html */
+function buildIntakePayload() {
+  const data = {};
+  const set = (key, val) => {
+    if (val === undefined || val === null) return;
+    const s = typeof val === 'string' ? val.trim() : val;
+    if (s === '') return;
+    data[key] = typeof val === 'string' ? val.trim() : val;
+  };
+
+  set('name', state.name);
+  set('email', state.email);
+  set('phone', state.phone);
+  set('instagram', state.instagram);
+  set('parent_email', state.parentEmail);
+  if (state.photoStorageUrl) set('profile_photo_url', state.photoStorageUrl);
+  else if (state.photoDataUrl) set('profile_photo_url', state.photoDataUrl);
+
+  set('position', state.position);
+  set('height_inches', String(state.height));
+  set('weight_lbs', String(state.weight));
+  set('jersey_number', state.jerseyNumber);
+  set('dominant_foot', state.dominantFoot);
+
+  if (state.statsMethod === 'link') set('stats_method', 'link');
+  else if (state.statsMethod === 'manual') set('stats_method', 'manual');
+
+  set('stats_link', state.statsLink);
+  set('games_played', state.gamesPlayed);
+  set('goals', state.goals);
+  set('assists', state.assists);
+  set('shots', state.shots);
+  set('minutes', state.minutes);
+  set('pass_accuracy', state.passAcc);
+  set('tackles', state.tackles);
+  set('saves', state.saves);
+  set('clean_sheets', state.cleanSheets);
+  set('goals_against_avg', state.gaa);
+
+  data.stats_public = state.statsPublic ? 'yes' : 'no';
+  data.photo_public = state.photoPublic ? 'yes' : 'no';
+
+  data.show_academics = state.showAcademics ? 'yes' : 'no';
+  set('gpa', state.gpa);
+  set('ncaa_id', state.ncaaId);
+  set('major', state.major);
+
+  state.honors.slice(0, 5).forEach((h, i) => set(`honor_${i + 1}`, h));
+
+  collectHighlightsForIntake().forEach((h, i) => {
+    const n = i + 1;
+    set(`highlight_${n}_title`, h.title);
+    set(`highlight_${n}_opponent`, h.opponent);
+    set(`highlight_${n}_date`, h.date);
+    set(`highlight_${n}_description`, h.description);
+    set(`highlight_${n}_media_url`, h.media_url);
+  });
+
+  collectExperienceForIntake().forEach((ex, i) => {
+    const n = i + 1;
+    set(`experience_${n}_type`, ex.type);
+    set(`experience_${n}_title`, ex.title);
+    set(`experience_${n}_description`, ex.description);
+  });
+
+  collectTestimonialsForIntake().forEach((t, i) => {
+    const n = i + 1;
+    set(`testimonial_${n}_name`, t.name);
+    set(`testimonial_${n}_role`, t.role);
+    set(`testimonial_${n}_quote`, t.quote);
+  });
+
+  state.personalityTags.slice(0, 5).forEach((t, i) => set(`personality_tag_${i + 1}`, t));
+
+  return data;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -811,21 +1157,12 @@ function wireHandlers() {
     updateStrength();
   });
 
-  // ── Media: photo upload ─────────────────────────────────────
+  // ── Media: profile photo → Supabase Storage (or data URL fallback)
   $('photo-file').addEventListener('change', e => {
-    const file = e.target.files[0];
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      state.photoDataUrl = ev.target.result;
-      const img  = $('photo-actual');
-      const icon = $('photo-placeholder-icon');
-      img.src          = state.photoDataUrl;
-      img.style.display = 'block';
-      icon.style.display = 'none';
-      updateStrength();
-    };
-    reader.readAsDataURL(file);
+    handleProfilePhotoFile(file);
+    e.target.value = '';
   });
 
   // ── Media: privacy toggles ──────────────────────────────────
@@ -854,16 +1191,36 @@ function wireHandlers() {
     $('publish-btn').disabled = !state.confirmed;
   });
 
-  // ── Publish ─────────────────────────────────────────────────
-  $('publish-btn').addEventListener('click', () => {
+  // ── Publish → Supabase (same table + columns as ogform.html)
+  $('publish-btn').addEventListener('click', async () => {
     const btn = $('publish-btn');
+    const client = getSupabaseClient();
+    if (!client) {
+      alert('Supabase is not configured. Copy supabase-config.example.js to supabase-config.js and set SUPABASE_URL and SUPABASE_ANON_KEY.');
+      return;
+    }
+
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> SUBMITTING…';
+
+    await ensureProfilePhotoUploadedForPublish(client);
+    const payload = buildIntakePayload();
+    const { error } = await client.from(INTAKE_TABLE).insert([payload]);
+
+    if (error) {
+      console.error(error);
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      alert('Could not save your profile: ' + error.message);
+      return;
+    }
+
+    localStorage.setItem('athleteProfile', JSON.stringify(state));
     btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> PROFILE PUBLISHED!';
     btn.style.background = 'linear-gradient(135deg,var(--secondary),var(--secondary-dim))';
-    btn.style.color      = 'var(--on-secondary)';
-    btn.style.boxShadow  = '0 0 36px rgba(0,238,252,.35)';
-    btn.disabled = true;
-    // Persist to localStorage
-    localStorage.setItem('athleteProfile', JSON.stringify(state));
+    btn.style.color = 'var(--on-secondary)';
+    btn.style.boxShadow = '0 0 36px rgba(0,238,252,.35)';
   });
 
   // ── Save & Exit ─────────────────────────────────────────────

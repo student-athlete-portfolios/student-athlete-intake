@@ -676,6 +676,7 @@
             </label>
             <input type="file" id="photo-file" accept="image/*" style="display:none;"/>
             <p class="upload-hint">JPG / PNG · max 5 MB · optional</p>
+            <p class="upload-status" id="photo-upload-status" aria-live="polite"></p>
           </div>
         </div>
 
@@ -964,6 +965,8 @@
 </button>
 <div class="preview-overlay" id="preview-overlay"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
