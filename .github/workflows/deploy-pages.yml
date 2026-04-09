@@ -1,0 +1,66 @@
+# Generates gitignored supabase-config.js from repo secrets, then publishes the site.
+# Repo → Settings → Secrets and variables → Actions → add:
+#   SUPABASE_URL, SUPABASE_ANON_KEY (optional: SUPABASE_STORAGE_BUCKET, default athlete-intake)
+# Repo → Settings → Pages → Build: GitHub Actions
+
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write supabase-config.js from secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const url = process.env.SUPABASE_URL;
+          const key = process.env.SUPABASE_ANON_KEY;
+          const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'athlete-intake';
+          if (!url || !key) {
+            console.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY in repository Actions secrets.');
+            process.exit(1);
+          }
+          const lines = [
+            'window.SUPABASE_URL = ' + JSON.stringify(url) + ';',
+            'window.SUPABASE_ANON_KEY = ' + JSON.stringify(key) + ';',
+            'window.SUPABASE_STORAGE_BUCKET = ' + JSON.stringify(bucket) + ';',
+            '',
+          ];
+          fs.writeFileSync('supabase-config.js', lines.join('\n'));
+          NODE
+
+      - name: Assemble static site (no .git or dev folders)
+        run: |
+          mkdir -p _site
+          cp index.html style.css app.js supabase-config.js _site/
+
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
