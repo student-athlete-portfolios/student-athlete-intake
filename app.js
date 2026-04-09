@@ -462,6 +462,7 @@ function addHighlightCard() {
       <div class="card-field">
         <label>MEDIA URL <span style="opacity:.45;font-size:.55rem;">(OPTIONAL)</span></label>
         <input type="url" class="field-input highlight-media-url" placeholder="https://youtube.com/..."/>
+        <input type="hidden" class="highlight-uploaded-url" value=""/>
       </div>
       <div class="card-field">
         <label>MEDIA <span style="opacity:.45;font-size:.55rem;">(OPTIONAL)</span></label>
@@ -902,9 +903,10 @@ function wireHighlightMedia(card, hlId) {
   const fileInput = card.querySelector('.highlight-file-input');
   const drop = card.querySelector('.media-drop');
   const urlInput = card.querySelector('.highlight-media-url');
+  const uploadedUrlInput = card.querySelector('.highlight-uploaded-url');
   const status = card.querySelector('.highlight-upload-status');
   const label = drop.querySelector('.media-drop-label');
-  if (!fileInput || !drop || !urlInput) return;
+  if (!fileInput || !drop || !urlInput || !uploadedUrlInput) return;
 
   const maxBytes = 50 * 1024 * 1024;
 
@@ -928,10 +930,10 @@ function wireHighlightMedia(card, hlId) {
 
     try {
       const url = await uploadToIntakeStorage(client, `highlights/${hlId}`, file);
-      urlInput.value = url;
+      uploadedUrlInput.value = url;
       if (label) label.textContent = file.name;
       if (status) {
-        status.textContent = 'Uploaded — URL filled above';
+        status.textContent = 'Uploaded — media attached';
         status.classList.add('upload-ok');
       }
     } catch (err) {
@@ -959,6 +961,10 @@ function wireHighlightMedia(card, hlId) {
     }
   });
   fileInput.addEventListener('change', e => runUpload(e.target.files[0]));
+  urlInput.addEventListener('input', () => {
+    // If user manually pastes a URL, prefer that and discard hidden uploaded URL.
+    if (urlInput.value.trim()) uploadedUrlInput.value = '';
+  });
 
   ['dragenter', 'dragover'].forEach(evName => {
     drop.addEventListener(evName, e => {
@@ -984,13 +990,14 @@ function collectHighlightsForIntake() {
   return $$('#highlights-container .entry-card').slice(0, MAX_MULTI_ENTRIES).map(card => {
     const texts = card.querySelectorAll('.entry-card-body input[type="text"]');
     const urlIn = card.querySelector('.highlight-media-url');
+    const uploadedUrlIn = card.querySelector('.highlight-uploaded-url');
     const ta = card.querySelector('.entry-card-body textarea');
     return {
       title: texts[0]?.value?.trim() || '',
       opponent: texts[1]?.value?.trim() || '',
       date: texts[2]?.value?.trim() || '',
       description: ta?.value?.trim() || '',
-      media_url: urlIn?.value?.trim() || '',
+      media_url: urlIn?.value?.trim() || uploadedUrlIn?.value?.trim() || '',
     };
   });
 }
