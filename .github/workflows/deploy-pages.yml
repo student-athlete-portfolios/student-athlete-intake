@@ -37,7 +37,7 @@ jobs:
           const fs = require('fs');
           const url = process.env.SUPABASE_URL;
           const key = process.env.SUPABASE_ANON_KEY;
-          const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'athlete-intake';
+          const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'intake-form-media';
           if (!url || !key) {
             console.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY in repository Actions secrets.');
             process.exit(1);
