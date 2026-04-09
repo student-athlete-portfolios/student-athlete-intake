@@ -39,6 +39,7 @@ const state = {
 
   // Goalkeeper stats
   saves: '', cleanSheets: '', gaa: '',
+  customStats: [], // [{ name, value }]
 
   // Cards
   highlights:   [],   // [{id}]
@@ -49,6 +50,7 @@ const state = {
   showAcademics: false,
   gpa: '', ncaaId: '', major: '',
   honors: [],
+  customHonors: [],
 
   // Personality
   personalityTags: [],
@@ -286,8 +288,144 @@ function staggerReveal(gridId) {
 // ──────────────────────────────────────────────────────────────
 // CARD SYSTEMS
 // ──────────────────────────────────────────────────────────────
+const MAX_MULTI_ENTRIES = 3;
+const MAX_HONORS = 5;
+const MAX_CUSTOM_STATS = 5;
+
+function refreshEntryLimitButtons() {
+  const highlightBtn = $('add-highlight-btn');
+  if (highlightBtn) highlightBtn.disabled = state.highlights.length >= MAX_MULTI_ENTRIES;
+
+  const experienceBtn = $('add-experience-btn');
+  if (experienceBtn) experienceBtn.disabled = state.experience.length >= MAX_MULTI_ENTRIES;
+
+  const testimonialBtn = $('add-testimonial-btn');
+  if (testimonialBtn) testimonialBtn.disabled = state.testimonials.length >= MAX_MULTI_ENTRIES;
+}
+
+function getCleanCustomStats() {
+  return state.customStats
+    .slice(0, MAX_CUSTOM_STATS)
+    .map(s => ({
+      name: String(s?.name || '').trim(),
+      value: String(s?.value || '').trim(),
+    }))
+    .filter(s => s.name && s.value);
+}
+
+function getCleanCustomHonors() {
+  return state.customHonors
+    .slice(0, MAX_HONORS)
+    .map(h => String(h || '').trim())
+    .filter(Boolean);
+}
+
+function renderCustomStatsRows() {
+  const targets = ['custom-stats-list-field', 'custom-stats-list-gk'];
+  const clean = state.customStats.slice(0, MAX_CUSTOM_STATS);
+
+  targets.forEach(id => {
+    const container = $(id);
+    if (!container) return;
+    container.innerHTML = '';
+
+    clean.forEach((row, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'card-row';
+      wrap.innerHTML = `
+        <div class="card-field">
+          <label>STAT NAME</label>
+          <input type="text" class="field-input custom-stat-name" placeholder="e.g., Clearances" value="${String(row.name || '').replace(/"/g, '&quot;')}"/>
+        </div>
+        <div class="card-field">
+          <label>VALUE</label>
+          <input type="text" class="field-input custom-stat-value" placeholder="e.g., 12" value="${String(row.value || '').replace(/"/g, '&quot;')}"/>
+        </div>
+        <div class="card-field" style="max-width:64px;align-self:flex-end;">
+          <button class="remove-btn custom-stat-remove" type="button" aria-label="Remove custom stat">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      `;
+
+      wrap.querySelector('.custom-stat-name').addEventListener('input', e => {
+        state.customStats[i].name = e.target.value;
+      });
+      wrap.querySelector('.custom-stat-value').addEventListener('input', e => {
+        state.customStats[i].value = e.target.value;
+      });
+      wrap.querySelector('.custom-stat-remove').addEventListener('click', () => {
+        state.customStats.splice(i, 1);
+        renderCustomStatsRows();
+      });
+      container.appendChild(wrap);
+    });
+  });
+
+  const atLimit = state.customStats.length >= MAX_CUSTOM_STATS;
+  const addField = $('add-custom-stat-field');
+  const addGk = $('add-custom-stat-gk');
+  if (addField) addField.disabled = atLimit;
+  if (addGk) addGk.disabled = atLimit;
+}
+
+function addCustomStatRow() {
+  if (state.customStats.length >= MAX_CUSTOM_STATS) {
+    alert(`You can add up to ${MAX_CUSTOM_STATS} custom stats.`);
+    return;
+  }
+  state.customStats.push({ name: '', value: '' });
+  renderCustomStatsRows();
+}
+
+function renderCustomHonorRows() {
+  const container = $('custom-honors-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  state.customHonors.slice(0, MAX_HONORS).forEach((honor, i) => {
+    const row = document.createElement('div');
+    row.className = 'card-row';
+    row.innerHTML = `
+      <div class="card-field">
+        <label>HONOR</label>
+        <input type="text" class="field-input custom-honor-input" placeholder="e.g., Team MVP" value="${String(honor || '').replace(/"/g, '&quot;')}"/>
+      </div>
+      <div class="card-field" style="max-width:64px;align-self:flex-end;">
+        <button class="remove-btn custom-honor-remove" type="button" aria-label="Remove custom honor">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    `;
+    row.querySelector('.custom-honor-input').addEventListener('input', e => {
+      state.customHonors[i] = e.target.value;
+    });
+    row.querySelector('.custom-honor-remove').addEventListener('click', () => {
+      state.customHonors.splice(i, 1);
+      renderCustomHonorRows();
+    });
+    container.appendChild(row);
+  });
+
+  const addBtn = $('add-custom-honor-btn');
+  if (addBtn) addBtn.disabled = state.customHonors.length >= MAX_HONORS;
+}
+
+function addCustomHonorRow() {
+  if (state.customHonors.length >= MAX_HONORS) {
+    alert(`You can add up to ${MAX_HONORS} custom honors.`);
+    return;
+  }
+  state.customHonors.push('');
+  renderCustomHonorRows();
+}
+
 let _hlCount = 0;
 function addHighlightCard() {
+  if (state.highlights.length >= MAX_MULTI_ENTRIES) {
+    alert(`You can add up to ${MAX_MULTI_ENTRIES} highlights.`);
+    return;
+  }
   _hlCount++;
   const id = `hl-${Date.now()}`;
   state.highlights.push({ id });
@@ -339,16 +477,22 @@ function addHighlightCard() {
   card.querySelector('.remove-btn').addEventListener('click', () => {
     card.remove();
     state.highlights = state.highlights.filter(h => h.id !== id);
+    refreshEntryLimitButtons();
     updateStrength();
   });
 
   wireHighlightMedia(card, id);
   $('highlights-container').appendChild(card);
+  refreshEntryLimitButtons();
   updateStrength();
 }
 
 let _expCount = 0;
 function addExperienceCard() {
+  if (state.experience.length >= MAX_MULTI_ENTRIES) {
+    alert(`You can add up to ${MAX_MULTI_ENTRIES} experience entries.`);
+    return;
+  }
   _expCount++;
   const id  = `exp-${Date.now()}`;
   const rec = { id, type: 'Activity' };
@@ -391,15 +535,21 @@ function addExperienceCard() {
   card.querySelector('.remove-btn').addEventListener('click', () => {
     card.remove();
     state.experience = state.experience.filter(e => e.id !== id);
+    refreshEntryLimitButtons();
     updateStrength();
   });
 
   $('experience-container').appendChild(card);
+  refreshEntryLimitButtons();
   updateStrength();
 }
 
 let _testCount = 0;
 function addTestimonialCard() {
+  if (state.testimonials.length >= MAX_MULTI_ENTRIES) {
+    alert(`You can add up to ${MAX_MULTI_ENTRIES} testimonials.`);
+    return;
+  }
   _testCount++;
   const id = `test-${Date.now()}`;
   state.testimonials.push({ id });
@@ -434,10 +584,12 @@ function addTestimonialCard() {
   card.querySelector('.remove-btn').addEventListener('click', () => {
     card.remove();
     state.testimonials = state.testimonials.filter(t => t.id !== id);
+    refreshEntryLimitButtons();
     updateStrength();
   });
 
   $('testimonials-container').appendChild(card);
+  refreshEntryLimitButtons();
   updateStrength();
 }
 
@@ -829,7 +981,7 @@ function wireHighlightMedia(card, hlId) {
 }
 
 function collectHighlightsForIntake() {
-  return $$('#highlights-container .entry-card').slice(0, 3).map(card => {
+  return $$('#highlights-container .entry-card').slice(0, MAX_MULTI_ENTRIES).map(card => {
     const texts = card.querySelectorAll('.entry-card-body input[type="text"]');
     const urlIn = card.querySelector('.highlight-media-url');
     const ta = card.querySelector('.entry-card-body textarea');
@@ -844,7 +996,7 @@ function collectHighlightsForIntake() {
 }
 
 function collectExperienceForIntake() {
-  return $$('#experience-container .entry-card').slice(0, 3).map(card => {
+  return $$('#experience-container .entry-card').slice(0, MAX_MULTI_ENTRIES).map(card => {
     const id = card.dataset.id;
     const rec = state.experience.find(e => e.id === id);
     const titleIn = card.querySelector('.entry-card-body input[type="text"]');
@@ -858,7 +1010,7 @@ function collectExperienceForIntake() {
 }
 
 function collectTestimonialsForIntake() {
-  return $$('#testimonials-container .entry-card').slice(0, 3).map(card => {
+  return $$('#testimonials-container .entry-card').slice(0, MAX_MULTI_ENTRIES).map(card => {
     const texts = card.querySelectorAll('.entry-card-body input[type="text"]');
     const ta = card.querySelector('.entry-card-body textarea');
     return {
@@ -907,6 +1059,10 @@ function buildIntakePayload() {
   set('saves', state.saves);
   set('clean_sheets', state.cleanSheets);
   set('goals_against_avg', state.gaa);
+  if (state.statsMethod === 'manual') {
+    const customStats = getCleanCustomStats();
+    if (customStats.length) set('custom_stats', JSON.stringify(customStats));
+  }
 
   data.stats_public = state.statsPublic ? 'yes' : 'no';
   data.photo_public = state.photoPublic ? 'yes' : 'no';
@@ -916,7 +1072,9 @@ function buildIntakePayload() {
   set('ncaa_id', state.ncaaId);
   set('major', state.major);
 
-  state.honors.slice(0, 5).forEach((h, i) => set(`honor_${i + 1}`, h));
+  state.honors.slice(0, MAX_HONORS).forEach((h, i) => set(`honor_${i + 1}`, h));
+  const customHonors = getCleanCustomHonors();
+  if (customHonors.length) set('custom_honors', JSON.stringify(customHonors));
 
   collectHighlightsForIntake().forEach((h, i) => {
     const n = i + 1;
@@ -1062,6 +1220,11 @@ function wireHandlers() {
     if (key) { state[key] = e.target.value; updateStrength(); }
   });
 
+  const addCustomField = $('add-custom-stat-field');
+  if (addCustomField) addCustomField.addEventListener('click', addCustomStatRow);
+  const addCustomGk = $('add-custom-stat-gk');
+  if (addCustomGk) addCustomGk.addEventListener('click', addCustomStatRow);
+
   // ── Highlights: add button ──────────────────────────────────
   $('add-highlight-btn').addEventListener('click', addHighlightCard);
 
@@ -1087,12 +1250,22 @@ function wireHandlers() {
 
   $$('#honors-pool .honor-chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      chip.classList.toggle('selected');
       const h = chip.dataset.honor;
-      if (chip.classList.contains('selected')) state.honors.push(h);
-      else state.honors = state.honors.filter(x => x !== h);
+      if (chip.classList.contains('selected')) {
+        chip.classList.remove('selected');
+        state.honors = state.honors.filter(x => x !== h);
+        return;
+      }
+      if (state.honors.length >= MAX_HONORS) {
+        alert(`You can select up to ${MAX_HONORS} honors.`);
+        return;
+      }
+      chip.classList.add('selected');
+      state.honors.push(h);
     });
   });
+  const addCustomHonorBtn = $('add-custom-honor-btn');
+  if (addCustomHonorBtn) addCustomHonorBtn.addEventListener('click', addCustomHonorRow);
 
   // ── Experience: add button ──────────────────────────────────
   $('add-experience-btn').addEventListener('click', addExperienceCard);
@@ -1252,6 +1425,9 @@ function wireHandlers() {
 // ──────────────────────────────────────────────────────────────
 function init() {
   wireHandlers();
+  refreshEntryLimitButtons();
+  renderCustomStatsRows();
+  renderCustomHonorRows();
   refreshNav();
   refreshDots();
   updateStrength();
