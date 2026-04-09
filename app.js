@@ -1121,6 +1121,15 @@ function wireHandlers() {
   $('nav-next').addEventListener('click', goNext);
   $('nav-back').addEventListener('click', goBack);
   $('header-back').addEventListener('click', goBack);
+  const homeLink = $('header-home');
+  if (homeLink) {
+    homeLink.addEventListener('click', (e) => {
+      const pastFirstQuestion = state.screenIndex > 1 || (state.screenIndex === 1 && state.identitySubStep > 1);
+      if (!pastFirstQuestion) return;
+      e.preventDefault();
+      window.open(homeLink.href, '_blank', 'noopener,noreferrer');
+    });
+  }
 
   // ── Identity: Name ─────────────────────────────────────────
   $('athlete-name').addEventListener('input', e => {
@@ -1403,15 +1412,17 @@ function wireHandlers() {
     btn.style.boxShadow = '0 0 36px rgba(0,238,252,.35)';
   });
 
-  // ── Save & Exit ─────────────────────────────────────────────
-  $('save-exit').addEventListener('click', () => {
-    localStorage.setItem('athleteProfileDraft', JSON.stringify(state));
-    // Flash confirm
-    const btn = $('save-exit');
-    const orig = btn.textContent;
-    btn.textContent = 'SAVED ✓';
-    setTimeout(() => (btn.textContent = orig), 1500);
-  });
+  // ── Save & Exit (optional button in some header variants) ──
+  const saveExitBtn = $('save-exit');
+  if (saveExitBtn) {
+    saveExitBtn.addEventListener('click', () => {
+      localStorage.setItem('athleteProfileDraft', JSON.stringify(state));
+      // Flash confirm
+      const orig = saveExitBtn.textContent;
+      saveExitBtn.textContent = 'SAVED ✓';
+      setTimeout(() => (saveExitBtn.textContent = orig), 1500);
+    });
+  }
 
   // ── Mobile: preview FAB & overlay ──────────────────────────
   const panel   = $('preview-panel');
